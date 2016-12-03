@@ -22,5 +22,6 @@ public interface IDSManager {
     Cursor getBusinesses();
     Cursor getActivities();
     Boolean checkChangeInDataSource();
+    Boolean dbChange();
     //Content Provider to check what that means.
 }

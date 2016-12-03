@@ -2,6 +2,7 @@ package com.example.ophir.javaproject_9818_1831.model.datasource;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 
 import com.example.ophir.javaproject_9818_1831.model.backend.IDSManager;
 import com.example.ophir.javaproject_9818_1831.model.entities.Activities;
@@ -18,14 +19,23 @@ import java.util.ArrayList;
  */
 
 public class ListDsManager implements IDSManager {
-    Boolean agenciesUpdates = false;
+    Boolean businessOrActivitiesAdded = false;
+    Boolean dbChanges = false;
     ArrayList<Business> businesses = new ArrayList<>();
     ArrayList<Activities> activities = new ArrayList<>();
     ArrayList<User> users = new ArrayList<>();
 
     @Override
     public Boolean addUser(ContentValues user) {
-        return null;
+        try {
+            users.add(new User(
+                    user.getAsInteger("identificationNumber"),
+                    user.getAsString("password")
+            ));
+        }
+        catch (Exception e){return false;}
+        dbChanges = true;
+        return true;
     }
 
     @Override
@@ -41,20 +51,14 @@ public class ListDsManager implements IDSManager {
             ));
         }
         catch (Exception e){return false;}
-        agenciesUpdates = true;
-        return  true;
+        businessOrActivitiesAdded = true;
+        dbChanges = true;
+        return true;
     }
 
     @Override
     public Boolean addActivity(ContentValues activity) {
         try {
-            /*this.activityType = activityType;
-        this.country = country;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.coast = coast;
-        this.description = description;
-        this.businessId = businessId;*/
             activities.add(new Activities(
                     ActivityDescription.valueOf(activity.getAsString("activityType")),
                     activity.getAsString("country"),
@@ -66,36 +70,86 @@ public class ListDsManager implements IDSManager {
                     ));
         }
         catch (Exception e){return false;}
-        agenciesUpdates = true;
-        return  true;
+        businessOrActivitiesAdded = true;
+        dbChanges = true;
+        return true;
 
     }
 
     @Override
     public Boolean checkChangeInBusinessesAndActivities() {
-        return null;
+
+        if(businessOrActivitiesAdded)
+        {
+            businessOrActivitiesAdded = false;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public Cursor getUsers() {
-        return null;
+        MatrixCursor usersCursor = new MatrixCursor(new String[]{"identificationNumber","password"});
+        for(User user:users){
+            usersCursor.addRow(new Object[]{
+                    user.getIdentificationNumber(),
+                    user.getPassword()
+            });
+        }
+        return usersCursor;
     }
 
     @Override
     public Cursor getBusinesses() {
-        return null;
+        MatrixCursor usersCursor = new MatrixCursor(new String[]{"id","name","country","city","street","houseNumber","phoneNumber","email","webSiteUrl"});
+        for(Business business:businesses){
+            usersCursor.addRow(new Object[]{
+                    business.getId(),
+                    business.getName(),
+                    business.getAddress().getCountry(),
+                    business.getAddress().getCity(),
+                    business.getAddress().getStreet(),
+                    business.getAddress().getHouseNumber(),
+                    business.getPhoneNumber(),
+                    business.getEmail(),
+                    business.getWebSiteUrl()
+            });
+        }
+        return usersCursor;
     }
 
     @Override
     public Cursor getActivities() {
-        return null;
+        MatrixCursor activitiesCursor = new MatrixCursor(new String[]{"activityType","country","startDate","endDate","coast","description","businessId"});
+        for(Activities activity:activities){
+            activitiesCursor.addRow(new Object[]{
+                    activity.getActivityType().toString(),
+                    activity.getCountry(),
+                    activity.getStartDate().toString(),
+                    activity.getEndDate().toString(),
+                    activity.getCoast(),
+                    activity.getDescription(),
+                    activity.getBusinessId()
+            });
+        }
+        return activitiesCursor;
     }
 
     @Override
     public Boolean checkChangeInDataSource() {
-        if(agenciesUpdates)
+        if(businessOrActivitiesAdded)
         {
-            agenciesUpdates = false;
+            businessOrActivitiesAdded = false;
+            return true;
+        }
+        return false;
+    }
+    @Override
+    public Boolean dbChange()
+    {
+        if(dbChanges)
+        {
+            dbChanges = false;
             return true;
         }
         return false;
